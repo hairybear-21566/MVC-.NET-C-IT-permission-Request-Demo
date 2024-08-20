@@ -1,0 +1,16 @@
+﻿
+@{
+    ViewBag.Title = "Data";
+    Layout = "~/Views/Shared/_LayoutContact.cshtml";
+}
+
+<main>
+    <h1>my data</h1>
+    <ul>
+        @foreach (KeyValuePair<string, string> d in ViewBag.data){
+            <li><h1>@(d.Key) @(d.Value)</h1></li>
+        }
+    </ul>
+    
+</main>
+
