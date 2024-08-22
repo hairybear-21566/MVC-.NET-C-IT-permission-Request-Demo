@@ -1,10 +1,12 @@
-﻿@model WebApplication1.Models.UserController
-
-
-@using (Html.BeginForm()) 
+﻿@model WebApplication1.Models.UserModel
+@{ 
+    ViewBag.Title = "Data";
+    Layout = "~/Views/Shared/_LayoutContact.cshtml";
+}
+@using (Html.BeginForm())
 {
     @Html.AntiForgeryToken()
-    
+
     <div class="form-horizontal">
         <h4>UserController</h4>
         <hr />

@@ -5,7 +5,7 @@ using System.Web;
 
 namespace WebApplication1.Models
 {
-    public class UserController
+    public class UserModel
     {
 
         public int Number { get; set; }
@@ -13,5 +13,6 @@ namespace WebApplication1.Models
         public string UserName { get; set; }
 
         public string Password { get; set; }
+
     }
 }

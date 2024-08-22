@@ -1,16 +1,76 @@
 ﻿
+@model IList<WebApplication1.Models.RightModel>
+
 @{
     ViewBag.Title = "Data";
     Layout = "~/Views/Shared/_LayoutContact.cshtml";
 }
 
 <main>
-    <h1>my data</h1>
+    <h1>My Data</h1>
+
+    <!-- First Form: Submit Key -->
+    @using (Html.BeginForm("Data", "Home", FormMethod.Post, new { id = "keyForm" }))
+    {
+        <label for="input">Enter a key (1-4):</label>
+        <input type="text" id="input" name="input" />
+        <button type="submit">Submit</button>
+    }
+
+    <!-- Display the key-value pairs if available -->
     <ul>
-        @foreach (KeyValuePair<string, string> d in ViewBag.data){
-            <li><h1>@(d.Key) @(d.Value)</h1></li>
+        @if (ViewBag.Data != null)
+        {
+            foreach (KeyValuePair<string, string> d in ViewBag.Data)
+            {
+                <li><h1>@(d.Key) @(d.Value)</h1></li>
+            }
         }
     </ul>
-    
-</main>
 
+    <!-- Second Form: Table with Checkboxes -->
+    @if (ViewBag.Records != null)
+    {
+        using (Html.BeginForm("UpdateRecords", "Home", FormMethod.Post, new { id = "recordsForm" }))
+        {
+            <div class="container mt-5">
+                <table class="table table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col" class="w-auto">Description</th>
+                            <th scope="col">View</th>
+                            <th scope="col">Create</th>
+                            <th scope="col">Delete</th>
+                            <th scope="col">Print</th>
+                            <th scope="col">Edit</th>
+                            <th scope="col">All</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!---->
+                      @for(int i = 0; i<Model.Count;i++)
+                        {
+                            @Html.HiddenFor(m => Model[i].FormName)
+                            <tr>
+                                <td>@(Model[i].FormName)</td>
+                                <td>@Html.CheckBoxFor(x => Model[i].View)</td>
+                                <td><input type="hidden" name="records[i].Create" value="false" /><input type="checkbox" name="records[i].Create" value="true" @(Model[i].Create ? "checked" : "") /></td>
+                                <td><input type="hidden" name="records[i].Delete" value="false" /><input type="checkbox" name="records[i].Delete" value="true" @(Model[i].Delete ? "checked" : "") /></td>
+                                <td><input type="hidden" name="records[i].Print" value="false" /><input type="checkbox" name="records[i].Print" value="true" @(Model[i].Print ? "checked" : "") /></td>
+                                <td><input type="hidden" name="records[i].Edit" value="false" /><input type="checkbox" name="records[i].Edit" value="true" @(Model[i].Edit ? "checked" : "") /></td>
+                                <td><input type="hidden" name="records[i].All" value="false" /><input type="checkbox" name="records[i].All" value="true" @(Model[i].All ? "checked" : "") /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <button type="submit">Update Records</button>
+            </div>
+        }
+    }
+
+    <!-- Display the result from the form submission -->
+    @if (ViewBag.Result != null)
+    {
+        <p>Result: @ViewBag.Result</p>
+    }
+</main>
