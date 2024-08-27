@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Validation;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -14,12 +10,8 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
-    
     public class HomeController : Controller
     {
-
-        private Project1Entities db = new Project1Entities();
-
         public ActionResult Index()
         {
             return View();
@@ -83,120 +75,35 @@ namespace WebApplication1.Controllers
             return View(rights);
         }
 
-        SqlConnection _connection = null;
 
-        private void EproConnection()
+        [HttpPost]
+        public ActionResult UpdateRecords(IList<RightModel> lst)
         {
-         
-            string strConnection = "Data Source=TYLERHP\\SQLEXPRESS;Initial Catalog=Project1;Integrated Security=True;Trust Server Certificate=True";
-            this._connection = new System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = strConnection;
-        }
+            string logFilePath = Server.MapPath("~/App_Data/FormDataLog.txt");
+            var logContent = new StringWriter();
 
-        
-        private void InitConnection()
-        {
-            //string queryString = "INSERT INTO Project1.dbo.Test VALUES ('8000','user name', 'user', 'form name',1,1,1,1,1,1,1);";
-
-            string queryString = "INSERT INTO Test(project_name,name,View,status) VALUES (@project_name,@name,@View,@status)";
-
-            SqlCommand command = new SqlCommand(queryString, _connection);
-            command.Parameters.AddWithValue("@project_name", "abc");
-            command.Parameters.AddWithValue("@name", "tyler");
-            command.Parameters.AddWithValue("@View", true);
-            command.Parameters.AddWithValue("@status", 100);
-
-            command.ExecuteNonQuery();
-
-
-            //var withBlock = sqlCmdEpro;
-            //withBlock.Connection = _connection;
-            //withBlock.CommandType = CommandType.Text;
-            //try
-            //{
-            //    withBlock.CommandText = "Insert into Test1 (id) values (" + key + ")";
-            //}
-            //catch (Exception ex)
-            //{
-            //   Interaction.MsgBox(ex.Message + "Update" + d.Name);
+            // Iterate over form collection keys and values
+         //   foreach (string key in formCollection.Keys)
+           /// {
+            //    logContent.WriteLine($"{key}: {formCollection[key]}");
             //}
 
+            // Write log content to file
+            System.IO.File.AppendAllText(logFilePath, logContent.ToString() + "\n");
 
-            /*
-            SqlConnection withBlock = new SqlConnection(this._connection.ConnectionString);
-            
-                using (SqlCommand getRole = new SqlCommand("findUserRole", withBlock))
-                {
-
-                    withBlock.Open(); //crashes at this line
-                    getRole.CommandType = CommandType.StoredProcedure;
-                    getRole.Parameters.Add(new SqlParameter("@Us", username));
-                    SqlDataReader reader = getRole.ExecuteReader();
-
-                }
-                withBlock.Close();
-             */
-            /* 
-            withBlock.Connection.Close();
-            withBlock.Connection.Open();
-            withBlock.ExecuteNonQuery();
-            withBlock.Connection.Close();
-            */
-        }
-
-
-        public void AddDb(Test obj)
-        {
-
-            string sql = "INSERT INTO Project1.dbo.Test VALUES ('8000','user name', 'user', obj.1,1,1,1,1,1)";
-
-
-            string strConnection = "Data Source=TYLERHP\\SQLEXPRESS;Initial Catalog=Project1;Integrated Security=True";
-            using (SqlConnection db = new SqlConnection(strConnection))
+            // For debugging in the view
+            ViewBag.FormData = logContent.ToString();
+            Dictionary<string, string> keyValuePairs = new Dictionary<string, string>
             {
-                db.Open();
-                SqlCommand command = new SQLcommand(sql, db);
-                command.ExecuteNonQuery();
-
-               
-
-                  
-                    db.Close();
-
-                   
-
-                }
-                
-                
-            }
-        
-
-    [HttpPost]
-    public ActionResult UpdateRecords(IList<RightModel> lst)
-    {
-            foreach (RightModel item in lst)
-            {
-                Test test = new Test
-                {
-                    status = item.status,
-                    All = item.All,
-                    Create = item.Create,
-                    project_code = item.project_code,
-                    Delete = item.Delete,
-                    name = item.name,
-                    Edit = item.Edit,
-                    form_name = item.form_name,
-                    View = item.View,
-                    username = item.username
-                };
-                AddDb(test);
-            }
-           
-
+                { "1", "foo" },
+                { "2", "bar" },
+                { "3", "baz" },
+                { "4", "gaaa" }
+            };
+            ViewBag.Data = keyValuePairs;
 
             return View("Data");
-        } 
-
+        }
 
 
         private List<String> GetFormsTimeKeeper() {
@@ -350,49 +257,26 @@ namespace WebApplication1.Controllers
             // Adding records
             // Reports - Time Keeper
 
-            //var right = new RightModel();
-            //right.FormName = "Reports - Time Keeper";
-            //right.View = false;
-            //right.Create = false;
-            //right.Delete = false;
-            //right.Print = false;
-            //right.All = false;
-            //right.Edit = false;
-            //rights.Add(right);
+            var right = new RightModel();
+            right.FormName = "Reports - Time Keeper";
+            right.View = false;
+            right.Create = false;
+            right.Delete = false;
+            right.Print = false;
+            right.All = false;
+            right.Edit = false;
+            rights.Add(right);
 
 
-            //right = new RightModel();
-            //right.FormName = "Reports - Time Scam";
-            //right.View = false;
-            //right.Create = false;
-            //right.Delete = false;
-            //right.Print = false;
-            //right.All = false;
-            //right.Edit = false;
-            //rights.Add(right);
-
-            foreach (String s in this.GetFormsTimeKeeper()) {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Forms - Time Keeper: "+s));
-            }
-            foreach (String s in this.GetReportsEquipments())
-            {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Equipment: " + s));
-            }
-
-            foreach (String s in this.GetFormsCostControl()) 
-            {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Forms - Cost Control: " + s));
-            }
-
-            foreach (String s in this.GetReportsCostControl())
-            {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Cost Control: " + s));
-            }
-
-            foreach(String s in this.GetReportsTimeKeeper())
-            {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Time Keeper: " + s));
-            }
+            right = new RightModel();
+            right.FormName = "Reports - Time Scam";
+            right.View = false;
+            right.Create = false;
+            right.Delete = false;
+            right.Print = false;
+            right.All = false;
+            right.Edit = false;
+            rights.Add(right);
 
 
 

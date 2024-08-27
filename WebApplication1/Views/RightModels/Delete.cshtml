@@ -1,0 +1,80 @@
+﻿@model WebApplication1.Models.RightModel
+
+@{
+    ViewBag.Title = "Delete";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>RightModel</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.FormName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.FormName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.View)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.View)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Delete)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Delete)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Create)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Create)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Edit)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Edit)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Print)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Print)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.All)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.All)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            @Html.ActionLink("Back to List", "Index")
+        </div>
+    }
+</div>
