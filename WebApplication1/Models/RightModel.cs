@@ -11,6 +11,7 @@ namespace WebApplication1.Models
     {
 
         public int id { get; set; }
+        public string RefNo { get; set; }
         public string project_code { get; set; }
         public string username { get; set; }
         public string name { get; set; }
@@ -43,21 +44,11 @@ namespace WebApplication1.Models
         // Constructor
 
         public RightModel()
-        {
-            this.View = true;
-            this.Delete = true;
-            this.Print = true;
-            this.Edit = true;
-            this.All = true;
-            this.Create = true;
-            this.form_name = "form name";
-            this.name = "tyler";
-            this.project_code = "8000";
-            this.username = "username";
-            this.status = 100;
+        { // can be also used to set default values in db from the way I have coded this thing
+         
         }
 
-        public RightModel(bool view,bool delete, bool create, bool print, bool edit, bool all, String formName)
+        public RightModel(bool view,bool delete, bool create, bool print, bool edit, bool all, String formName,int status,string name, string RefNo,string project_code, string username)
         {
            
             //User2 = user;
@@ -74,6 +65,11 @@ namespace WebApplication1.Models
             this.Edit = edit;
             this.All = all;
             this.form_name = formName;
+            this.name = name;
+            this.project_code = project_code;
+            this.username = username;
+            this.status = status;
+            this.RefNo = RefNo;
         }
 
     }

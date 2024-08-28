@@ -9,13 +9,15 @@
 <main>
     <h1>My Data</h1>
 
-    <!-- First Form: Submit Key -->
+    <!-- First Form: Submit Ke -->
     @using (Html.BeginForm("Data", "Home", FormMethod.Post, new { id = "keyForm" }))
     {
-        <label for="input">Enter a key (1-4):</label>
-        <input type="text" id="input" name="input" />
-        <button type="submit">Submit</button>
+        <label for="input">Enter RefNo</label>
+        <input type="text" name="input" />
+        <button type="submit" name="action" value="View">View</button>
+        <button type="submit" name="action" value="Create">+Create</button>
     }
+    @Html.ActionLink("Download","GeneratePDF","Home",new {RecordID = 42},null)
 
     <!-- Display the key-value pairs if available -->
     <ul>
@@ -28,6 +30,11 @@
         }
     </ul>
 
+    @if (ViewBag.Result != null)
+    {
+        <p>Result: @ViewBag.Result</p>
+    }
+
     <!-- Second Form: Table with Checkboxes -->
     @if (ViewBag.Records != null)
     {
@@ -37,7 +44,7 @@
                 <table class="table table-bordered">
                     <thead class="thead-dark">
                         <tr>
-                            <th scope="col" class="w-auto">Description</th>
+                            <th scope='col' class="w-auto">Description</th>
                             <th scope="col">View</th>
                             <th scope="col">Create</th>
                             <th scope="col">Delete</th>
@@ -48,29 +55,39 @@
                     </thead>
                     <tbody>
                         <!---->
-                      @for(int i = 0; i<Model.Count;i++)
+                        @for (int i = 0; i < Model.Count; i++)
                         {
                             @Html.HiddenFor(m => Model[i].form_name)
-                        <tr>
-                            <td>@(Model[i].form_name)</td>
-                            <td>@Html.CheckBoxFor(x => Model[i].View)</td>
-                            <td>@Html.CheckBoxFor(x => Model[i].Create)</td>
-                            <td>@Html.CheckBoxFor(x => Model[i].Print)</td>
-                            <td>@Html.CheckBoxFor(x => Model[i].Delete)</td>
-                            <td>@Html.CheckBoxFor(x => Model[i].Edit)</td>
-                            <td>@Html.CheckBoxFor(x => Model[i].All)</td>
-                        </tr>
+                            @Html.HiddenFor(m => Model[i].RefNo)
+                            @Html.HiddenFor(m => Model[i].username)
+                            @Html.HiddenFor(m => Model[i].name)
+                            @Html.HiddenFor(m => Model[i].project_code)
+
+                            <tr>
+                                <td>@(Model[i].form_name)</td>
+                                <td>@Html.CheckBoxFor(x => Model[i].View)</td>
+                                <td>@Html.CheckBoxFor(x => Model[i].Create)</td>
+                                <td>@Html.CheckBoxFor(x => Model[i].Print)</td>
+                                <td>@Html.CheckBoxFor(x => Model[i].Delete)</td>
+                                <td>@Html.CheckBoxFor(x => Model[i].Edit)</td>
+                                <td>@Html.CheckBoxFor(x => Model[i].All)</td>
+                            </tr>
                         }
                     </tbody>
                 </table>
-                <button type="submit">Update Records</button>
+                @if (ViewBag.CanSubmit == "YES")
+                {
+                    <button type="submit">Update Records</button>
+                }
+                else
+                {
+                    <button type="submit" disabled>Update Records</button>
+                }
+
             </div>
         }
     }
 
     <!-- Display the result from the form submission -->
-    @if (ViewBag.Result != null)
-    {
-        <p>Result: @ViewBag.Result</p>
-    }
+
 </main>

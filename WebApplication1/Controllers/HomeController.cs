@@ -1,4 +1,8 @@
-﻿using System;
+﻿using iTextSharp.text.html.simpleparser;
+using iTextSharp.text.pdf;
+using iTextSharp.text;
+using Microsoft.Ajax.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -6,10 +10,13 @@ using System.Data.Entity.Validation;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Services.Description;
+using System.Web.UI.WebControls;
 using WebApplication1.Models;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 
 namespace WebApplication1.Controllers
@@ -18,7 +25,8 @@ namespace WebApplication1.Controllers
     public class HomeController : Controller
     {
 
-        private Project1Entities db = new Project1Entities();
+        //private Project1Entities db = new Project1Entities();
+        private static readonly string strConnection = "Data Source=TYLERHP\\SQLEXPRESS;Initial Catalog=Project1;Integrated Security=True";
 
         public ActionResult Index()
         {
@@ -41,132 +49,156 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult Data()
         {
-            // Populate ViewBag.Data with the key-value pairs for the initial view
-            ViewBag.Data = new Dictionary<string, string>
-            {
-                { "1", "foo" },
-                { "2", "bar" },
-                { "3", "baz" },
-                { "4", "gaaa" }
-            };
-
+            
             return View();
         }
 
         [HttpPost]
-        public ActionResult Data(string input)
+        public ActionResult Data(string input, string action)
         {
-            var keyValuePairs = new Dictionary<string, string>
-    {
-        { "1", "foo" },
-        { "2", "bar" },
-        { "3", "baz" },
-        { "4", "gaaa" }
-    };
-
-            ViewBag.Data = keyValuePairs;
-            List<RightModel> rights = new List<RightModel>();
-
-
-            if (keyValuePairs.ContainsKey(input))
-            {
-                ViewBag.Result = $"Key: {input}, Value: {keyValuePairs[input]}";
-              rights= DisplayUserRights(input);
+            List < RightModel > rights = new List<RightModel>();
+            if (action == "View") {// Grabbing entries using SELECT
+                string sql = "SELECT * FROM Project1.dbo.EzwereRequest WHERE RefNo=@RefNo";
+                using (SqlConnection db = new SqlConnection(strConnection))
+                {
+                    db.Open();
+                    SqlCommand command = new SqlCommand(sql, db);
+                    command.Parameters.AddWithValue("@RefNo", input);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        try
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    RightModel right = new RightModel(
+                                        (bool)reader["View"],
+                                        (bool)reader["Delete"],
+                                        (bool)reader["Create"],
+                                        (bool)reader["Print"],
+                                        (bool)reader["Edit"],
+                                        (bool)reader["All"],
+                                        (string)reader["form_name"],
+                                        (int)reader["status"],
+                                        (string)reader["name"],
+                                        (string)reader["RefNo"],
+                                        (string)reader["project_code"],
+                                        (string)reader["username"]
+                                        );
+                                    rights.Add(right);
+                                    ViewBag.Result = "Select:found";
+                                    ViewBag.Records = "YES";
+                                    ViewBag.CanSubmit = "NO";
+                                }
+                            }
+                            else 
+                            {
+                                ViewBag.Result = "Select:ERROR - not found (invalid RefNo)";
+                                ViewBag.CanSubmit = "NO";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            ViewBag.Result = ex.Message;
+                        }
+                    }
+                    db.Close();
+                }
             }
-            else
-            {
-                ViewBag.Result = "Key not found.";
-                ViewBag.Records = new List<RightModel>();
+            else{//action == "Create"
+                string refNum = "006";
+                ViewBag.Records = "YES";
+                ViewBag.CanSubmit = "YES";
+                rights = DisplayUserRights("userid","name",refNum,"code","usernameeee");
             }
-            ViewBag.Records = "YES";
-
             return View(rights);
         }
 
-        SqlConnection _connection = null;
-
-        private void EproConnection()
+       public int execSqlInsert(string sql, string strConnection, bool retrieveMaxKey)
         {
-         
-            string strConnection = "Data Source=TYLERHP\\SQLEXPRESS;Initial Catalog=Project1;Integrated Security=True;Trust Server Certificate=True";
-            this._connection = new System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = strConnection;
-        }
+            using (SqlConnection db = new SqlConnection(strConnection))
+            {
 
-        
-        private void InitConnection()
-        {
-            //string queryString = "INSERT INTO Project1.dbo.Test VALUES ('8000','user name', 'user', 'form name',1,1,1,1,1,1,1);";
+                db.Open();
+                SqlCommand command = new SqlCommand(sql, db);
+                command.ExecuteNonQuery();
+                db.Close();
 
-            string queryString = "INSERT INTO Test(project_name,name,View,status) VALUES (@project_name,@name,@View,@status)";
+            }
 
-            SqlCommand command = new SqlCommand(queryString, _connection);
-            command.Parameters.AddWithValue("@project_name", "abc");
-            command.Parameters.AddWithValue("@name", "tyler");
-            command.Parameters.AddWithValue("@View", true);
-            command.Parameters.AddWithValue("@status", 100);
-
-            command.ExecuteNonQuery();
-
-
-            //var withBlock = sqlCmdEpro;
-            //withBlock.Connection = _connection;
-            //withBlock.CommandType = CommandType.Text;
-            //try
-            //{
-            //    withBlock.CommandText = "Insert into Test1 (id) values (" + key + ")";
-            //}
-            //catch (Exception ex)
-            //{
-            //   Interaction.MsgBox(ex.Message + "Update" + d.Name);
-            //}
-
-
-            /*
-            SqlConnection withBlock = new SqlConnection(this._connection.ConnectionString);
-            
-                using (SqlCommand getRole = new SqlCommand("findUserRole", withBlock))
+            if (retrieveMaxKey)
+            {
+                string query = "SELECT max(id) FROM EzwereRequest";
+                using (SqlConnection db = new SqlConnection(strConnection))
                 {
 
-                    withBlock.Open(); //crashes at this line
-                    getRole.CommandType = CommandType.StoredProcedure;
-                    getRole.Parameters.Add(new SqlParameter("@Us", username));
-                    SqlDataReader reader = getRole.ExecuteReader();
-
+                    db.Open();
+                    SqlCommand command = new SqlCommand(query, db);
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            bool ans = reader.Read();
+                            int value = (int) reader[""];
+                            ViewBag.Result = value;
+                            db.Close();
+                            return value;
+                        }
+                        else {
+                            ViewBag.Result = "not found";
+                            db.Close();
+                            return -1; }
+                    };
                 }
-                withBlock.Close();
-             */
-            /* 
-            withBlock.Connection.Close();
-            withBlock.Connection.Open();
-            withBlock.ExecuteNonQuery();
-            withBlock.Connection.Close();
-            */
+            }
+            ViewBag.Result = "not found";
+            return -1;
+        
         }
 
-
-        public void AddDb(Test obj)
+        public SqlDataReader execSqlSelect(string sql, string strConnection, string input)
         {
 
-            string sql = "INSERT INTO Project1.dbo.Test VALUES ('8000','user name', 'user', obj.1,1,1,1,1,1)";
-
-
-            string strConnection = "Data Source=TYLERHP\\SQLEXPRESS;Initial Catalog=Project1;Integrated Security=True";
             using (SqlConnection db = new SqlConnection(strConnection))
             {
                 db.Open();
-                SqlCommand command = new SQLcommand(sql, db);
-                command.ExecuteNonQuery();
+                SqlCommand command = new SqlCommand(sql, db);
+                command.Parameters.AddWithValue("@RefNo", input);
+                SqlDataReader queryResults = command.ExecuteReader();
+                db.Close();
+                return queryResults;
+            }
 
-               
+        }
+        public void AddDb(Test obj, HeaderModel model)
+        {
 
-                  
-                    db.Close();
+            string sql;
+            sql = "INSERT INTO EzwereRequest(RefNo, EmpCode, EmpName, Designation, Project, AssignedProject, Status) VALUES" +
+                         " ('" + model.RefNo + "','"
+                         + model.EmpCode + "'," 
+                         + "'"+ model.EmpName + "',"
+                         + "'"+model.Designation+"',"
+                         + "'"+model.Project + "',"
+                         + "'"+model.AssignedProject + "',"
+                         + ""+model.Status + ")";
 
-                   
 
-                }
-                
+            int RequestID=execSqlInsert(sql, HomeController.strConnection,true);
+
+
+             sql = "INSERT INTO EzwereRequestDetail(RequestId, form_name, [View], [Delete], [Create], [Print], [Edit], [All]) VALUES " +
+                   " (" + RequestID +",'" + obj.form_name + "', " +
+                         " " + (Convert.ToBoolean(obj.View) ? 1 : 0) + "," +
+                         " " + (Convert.ToBoolean(obj.Delete) ? 1 : 0) + "," +
+                         " " + (Convert.ToBoolean(obj.Create) ? 1 : 0) + "," +
+                         " " + (Convert.ToBoolean(obj.Print) ? 1 : 0) + "," +
+                         " " + (Convert.ToBoolean(obj.Edit) ? 1 : 0) + "," +
+                         " " + (Convert.ToBoolean(obj.All) ? 1 : 0) +")";
+                           
+            execSqlInsert(sql, HomeController.strConnection,true);
                 
             }
         
@@ -174,8 +206,23 @@ namespace WebApplication1.Controllers
     [HttpPost]
     public ActionResult UpdateRecords(IList<RightModel> lst)
     {
+
+            HeaderModel headerModel = new HeaderModel
+            {
+                Project = lst[0].project_code,
+                AssignedProject = "Assigned Project",
+                EmpCode = "0001",
+                EmpName = "Tyler",
+                Designation = "Student",
+                Status = 0,
+                RefNo = lst[0].RefNo
+
+
+            };
+
             foreach (RightModel item in lst)
             {
+                
                 Test test = new Test
                 {
                     status = item.status,
@@ -187,18 +234,148 @@ namespace WebApplication1.Controllers
                     Edit = item.Edit,
                     form_name = item.form_name,
                     View = item.View,
-                    username = item.username
+                    username = item.username,
+                    Print = item.Print,
+                    RefNo = item.RefNo
                 };
-                AddDb(test);
+                AddDb(test, headerModel);
             }
-           
 
 
+            //ViewBag.Result = $"insertttttttttttt {lst[0].RefNo}";
             return View("Data");
         } 
 
 
+    public FileResult GeneratePDF(int RecordID)
+        {
+            // retrieve
+            //_Services = new AjesServices();
 
+            string url = System.Configuration.ConfigurationManager.AppSettings.Get("Url");
+
+            url = url + "/content/images/logo.png";
+
+            //var obj = await _Services.GeneratePDF<ServiceRequestReport>(RecordID, ServiceCode);
+
+            string sql = "SELECT a.* ,b.* FROM Project1.dbo.EzwereRequest a\r\nINNER"+
+                " JOIN EzwereRequestDetail b  ON a.id=b.RequestId\r\nWhere a.id=1";
+            SqlDataReader reader;
+            StringBuilder sb = new StringBuilder();
+            string RefNum;
+
+            using (SqlConnection db = new SqlConnection(HomeController.strConnection))
+            {
+                db.Open();
+                SqlCommand command = new SqlCommand(sql, db);
+                reader = command.ExecuteReader();
+
+                if (!reader.HasRows)
+                {
+                    sb.Append("<h1>id not found</h1>");
+                    RefNum = "######";
+                }
+                else
+                {
+                    reader.Read();
+                    HeaderModel header = new HeaderModel
+                    {
+                        Project = (string)reader["Project"],
+                        AssignedProject = (string)reader["AssignedProject"],
+                        EmpCode = (string)reader["EmpCode"],
+                        EmpName = (string)reader["EmpName"],
+                        Designation = (string)reader["Designation"],
+                        Status = (int)reader["Status"],
+                        RefNo = (string)reader["RefNo"]
+                    };
+                    RefNum = header.RefNo;
+
+                    sb.Append("<header class='clearfix'>");
+                  
+                    sb.Append("<br>");
+                    sb.Append("<br>");
+
+                    sb.Append("<h1>" + "Al Jaber Energy Services" + "</h1>");
+                    sb.Append("<br>");
+                    sb.Append("<h1> RefNo:" + header.RefNo + " </h1>");
+                    sb.Append("<br>");
+                    sb.Append("<br>");
+                    sb.Append("<h2>Employee No</h2>");
+                    sb.Append($"<p>{header.EmpCode}</p>");
+
+                    sb.Append("<table border='1'>");
+
+                    sb.Append("<thead>");
+                    sb.Append("<tr>");
+                    sb.Append("<th scope = 'col' width='40%'>Description</th>");
+                    sb.Append("<th scope = 'col' > View </ th >");
+                    sb.Append("<th scope='col'>Create</th>");
+                    sb.Append("<th scope = 'col' > Delete </ th >");
+                    sb.Append("<th scope='col'>Print</th>");
+                    sb.Append("<th scope = 'col' > Edit </ th >");
+                    sb.Append("<th scope='col'>All</th>");
+                    sb.Append("</tr>");
+                    sb.Append("</thead>");
+                    sb.Append("<tbody>");
+                    int count = 0;
+                 
+                    while (reader.HasRows==true)
+                    {
+                        count += 1;
+                        try
+                        {
+                            bool viewrow = (bool)reader["View"];
+                            sb.Append("<tr>");
+                            sb.Append($"<td>{reader["form_name"]}</td>");
+                            sb.Append("<td>" + ((bool)reader["All"] ? "Y" : "N") + "</td>");
+                            sb.Append("<td>" + ((bool)reader["View"] ? "Y" : "N") + "</td>");
+                            sb.Append("<td>" + ((bool)reader["Create"] ? "Y" : "N") + "</td>");
+                            sb.Append("<td>" + ((bool)reader["Edit"] ? "Y" : "N") + "</td>");
+                            sb.Append("<td>" + ((bool)reader["Print"] ? "Y" : "N") + "</td>");
+                            sb.Append("<td>" + ((bool)reader["Delete"] ? "Y" : "N") + "</td>");
+                            sb.Append("</tr>");
+                            reader.Read();
+                        }
+                        catch (Exception ex){ break; }
+                       
+                    }
+                    sb.Append("</tbody>");
+                    sb.Append("</table>");
+                    sb.Append("<br>");
+
+                    sb.Append("</main>");
+                    sb.Append("<footer>");
+                    sb.Append("<br>");
+                    sb.Append("Document was created on a computer and is valid without the signature and seal.");
+                    sb.Append("</footer>");
+                    db.Close();
+            }
+            
+
+
+            
+
+            }
+            
+            
+
+
+            StringReader sr = new StringReader(sb.ToString());
+            Document pdfDoc = new Document(PageSize.EXECUTIVE);
+            HTMLWorker htmlparser = new HTMLWorker(pdfDoc);
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                PdfWriter writer = PdfWriter.GetInstance(pdfDoc, memoryStream);
+                pdfDoc.Open();
+
+                htmlparser.Parse(sr);
+                pdfDoc.Close();
+
+                byte[] bytes = memoryStream.ToArray();
+                memoryStream.Close();
+                return File(bytes, "application/pdf", "UserRights-" + RefNum + ".PDF");
+            }
+        }
         private List<String> GetFormsTimeKeeper() {
             return new List<String> {
                 "Employee",
@@ -333,119 +510,38 @@ namespace WebApplication1.Controllers
 
 
 
-        public List<RightModel>  DisplayUserRights(string userId)
+        public List<RightModel>  DisplayUserRights(string userId,string name, string RefNo, string project_code, string username)
         {
-
-            Dictionary<string, string> keyValuePairs = new Dictionary<string, string>
-            {
-                { "1", "foo" },
-                { "2", "bar" },
-                { "3", "baz" },
-                { "4", "gaaa" }
-            };
 
             List<RightModel> rights = new List<RightModel>();
 
-
-            // Adding records
-            // Reports - Time Keeper
-
-            //var right = new RightModel();
-            //right.FormName = "Reports - Time Keeper";
-            //right.View = false;
-            //right.Create = false;
-            //right.Delete = false;
-            //right.Print = false;
-            //right.All = false;
-            //right.Edit = false;
-            //rights.Add(right);
-
-
-            //right = new RightModel();
-            //right.FormName = "Reports - Time Scam";
-            //right.View = false;
-            //right.Create = false;
-            //right.Delete = false;
-            //right.Print = false;
-            //right.All = false;
-            //right.Edit = false;
-            //rights.Add(right);
-
             foreach (String s in this.GetFormsTimeKeeper()) {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Forms - Time Keeper: "+s));
+                rights.Add(new RightModel(false, false, false, false, false, false, "Forms - Time Keeper: "+s, 0, name, RefNo, project_code, username));
             }
             foreach (String s in this.GetReportsEquipments())
             {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Equipment: " + s));
+                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Equipment: " + s, 0, name, RefNo, project_code, username));
             }
 
             foreach (String s in this.GetFormsCostControl()) 
             {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Forms - Cost Control: " + s));
+                rights.Add(new RightModel(false, false, false, false, false, false, "Forms - Cost Control: " + s, 0, name, RefNo, project_code, username));
             }
 
             foreach (String s in this.GetReportsCostControl())
             {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Cost Control: " + s));
+                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Cost Control: " + s, 0, name, RefNo, project_code, username));
             }
 
             foreach(String s in this.GetReportsTimeKeeper())
             {
-                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Time Keeper: " + s));
+                rights.Add(new RightModel(false, false, false, false, false, false, "Reports - Time Keeper: " + s, 0, name, RefNo, project_code, username));
             }
 
-
-
-
-            //foreach (string key in this.GetReportsTimeKeeper())
-            //{
-            //    var user = new User2Model("JohnDoe", "Password123","JohnDoe@email.com");
-            //    var project = new ProjectsModel("...","...");
-            //    var role = new RolesModel(key, "Reports - Time Keeper");
-            //    var right = new RightModel(user, project, role);
-            //    rights.Add(right);
-            //}
-
-            //foreach (string key in this.GetReportsEquipments())
-            //{
-            //    var user = new User2Model("JohnDoe", "Password123", "JohnDoe@email.com");
-            //    var project = new ProjectsModel("...", "...");
-            //    var role = new RolesModel(key, "Reports - Equipment");
-            //    var right = new RightModel(user, project, role);
-            //    rights.Add(right);
-            //}
-
-            //foreach (string key in this.GetReportsCostControl())
-            //{
-            //    var user = new User2Model("JohnDoe", "Password123", "JohnDoe@email.com");
-            //    var project = new ProjectsModel("...", "...");
-            //    var role = new RolesModel(key, "Reports - Cost Control");
-            //    var right = new RightModel(user, project, role);
-            //    rights.Add(right);
-            //}
-
-            //foreach (string key in this.GetFormsTimeKeeper())
-            //{
-            //    var user = new User2Model("JohnDoe", "Password123", "JohnDoe@email.com");
-            //    var project = new ProjectsModel("...", "...");
-            //    var role = new RolesModel(key, "Forms - TimeKeepers");
-            //    var right = new RightModel(user, project, role);
-            //    rights.Add(right);
-            //}
-
-            //foreach (string key in this.GetFormsCostControl())
-            //{
-            //    var user = new User2Model("JohnDoe", "Password123", "JohnDoe@email.com");
-            //    var project = new ProjectsModel("...", "...");
-            //    var role = new RolesModel(key, "Forms - Cost Control");
-            //    var right = new RightModel(user, project, role);
-            //    rights.Add(right);
-            //}
+            ViewBag.Result = $"insertttttttttttt {RefNo}"+rights.ToString();
 
             return rights;
-         //   ViewBag.Records = rights ;
 
-         //   ViewBag.Data = keyValuePairs;
 
         }
     }
