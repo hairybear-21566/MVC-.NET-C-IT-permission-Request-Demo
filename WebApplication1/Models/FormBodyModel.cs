@@ -8,7 +8,7 @@ namespace WebApplication1.Models
     using System;
     using System.Collections.Generic;
 
-    public partial class Test
+    public partial class FormBody
     {
         public int id { get; set; }
         public string RefNo { get; set; }

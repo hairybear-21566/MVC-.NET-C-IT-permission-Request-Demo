@@ -17,23 +17,13 @@
         <button type="submit" name="action" value="View">View</button>
         <button type="submit" name="action" value="Create">+Create</button>
     }
-    @Html.ActionLink("Download","GeneratePDF","Home",new {RecordID = 42},null)
+    @Html.ActionLink("Download", "GeneratePDF", "Home", new { RecordID = 123 }, null)
 
-    <!-- Display the key-value pairs if available -->
-    <ul>
-        @if (ViewBag.Data != null)
-        {
-            foreach (KeyValuePair<string, string> d in ViewBag.Data)
-            {
-                <li><h1>@(d.Key) @(d.Value)</h1></li>
-            }
-        }
-    </ul>
+   
+   
 
-    @if (ViewBag.Result != null)
-    {
-        <p>Result: @ViewBag.Result</p>
-    }
+
+
 
     <!-- Second Form: Table with Checkboxes -->
     @if (ViewBag.Records != null)
@@ -55,13 +45,13 @@
                     </thead>
                     <tbody>
                         <!---->
-                        @for (int i = 0; i < Model.Count; i++)
-                        {
-                            @Html.HiddenFor(m => Model[i].form_name)
-                            @Html.HiddenFor(m => Model[i].RefNo)
-                            @Html.HiddenFor(m => Model[i].username)
-                            @Html.HiddenFor(m => Model[i].name)
-                            @Html.HiddenFor(m => Model[i].project_code)
+                        < @for (int i = 0; i < Model.Count; i++)
+                                {
+                                    @Html.HiddenFor(m => Model[i].form_name)
+                                    @Html.HiddenFor(m => Model[i].RefNo)
+                                    @Html.HiddenFor(m => Model[i].username)
+                                    @Html.HiddenFor(m => Model[i].name)
+                                    @Html.HiddenFor(m => Model[i].project_code)
 
                             <tr>
                                 <td>@(Model[i].form_name)</td>
@@ -74,19 +64,19 @@
                             </tr>
                         }
                     </tbody>
-                </table>
-                @if (ViewBag.CanSubmit == "YES")
-                {
-                    <button type="submit">Update Records</button>
-                }
-                else
-                {
-                    <button type="submit" disabled>Update Records</button>
-                }
+                    </table>
+                    @if (ViewBag.CanSubmit == "YES")
+                    {
+                        <button type="submit">Update Records</button>
+                    }
+                    else
+                    {
+                        <button type="submit" disabled>Update Records</button>
+                    }
 
-            </div>
-        }
-    }
+                    </div>
+                }
+            }
 
     <!-- Display the result from the form submission -->
 
