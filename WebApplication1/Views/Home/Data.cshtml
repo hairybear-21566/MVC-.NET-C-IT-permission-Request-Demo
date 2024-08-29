@@ -7,7 +7,6 @@
 }
 
 <main>
-    <h1>My Data</h1>
 
     <!-- First Form: Submit Ke -->
     @using (Html.BeginForm("Data", "Home", FormMethod.Post, new { id = "keyForm" }))
@@ -18,12 +17,6 @@
         <button type="submit" name="action" value="Create">+Create</button>
     }
     @Html.ActionLink("Download", "GeneratePDF", "Home", new { RecordID = 123 }, null)
-
-   
-   
-
-
-
 
     <!-- Second Form: Table with Checkboxes -->
     @if (ViewBag.Records != null)
@@ -73,7 +66,6 @@
                     {
                         <button type="submit" disabled>Update Records</button>
                     }
-
                     </div>
                 }
             }
